@@ -1,0 +1,65 @@
+# Данные  вводим через Shell, при пустой базе.
+
+# Импортируем модели
+from django.contrib.auth.models import User
+from news.models import *
+
+# Создаем пользователей и присваиваим им авторство
+user1 = User.objects.create_user(username='Aleks', first_name='Александр')
+user2 = User.objects.create_user(username='Ivan', first_name='Иван')
+author1 = Author.objects.create(id_user = user1, rating = 0)
+author2 = Author.objects.create(id_user = user2, rating = 0)
+
+# Создаем категории
+сat1 = Category.objects.create(name = "Наука")
+cat2 = Category.objects.create(name = "Культура")
+cat3 = Category.objects.create(name = "Бизнес")
+cat4 = Category.objects.create(name = "Кино")
+
+# Создаем статьи и новость
+post1 = Post.objects.create(id_author = author1, type = Post.article, header = "Заголовок статьи про науку", text = "Текст новости про науку...", rating = 0)
+post2 = Post.objects.create(id_author = author1, type = Post.news, header = "Заголовок новости про культуру и кино", text = "Текст новости про культуру и кино...", rating = 0)
+post3 = Post.objects.create(id_author = author2, type = Post.article, header = "Заголовок статьи про бизнес", text = "Текст статьи про бизнес...", rating = 0)
+
+# Связываем статьи и категории
+PostCategory.objects.create(id_post = post1, id_category = сat1)
+PostCategory.objects.create(id_post = post2, id_category = cat2)
+PostCategory.objects.create(id_post = post2, id_category = cat4)
+PostCategory.objects.create(id_post = post3, id_category = cat3)
+
+# Создаем комментария к статьям
+comment1 = Comment.objects.create(id_post = post1, id_user = user1, text = "Комментарий Александра к статье про науку", rating = 0)
+comment2 = Comment.objects.create(id_post = post2, id_user = user2, text = "Комментарий Ивана к статье про культуру и кино", rating = 0)
+comment3 = Comment.objects.create(id_post = post3, id_user = user1, text = "Комментарий Александра к статье про бизнес", rating = 0)
+comment4 = Comment.objects.create(id_post = post3, id_user = user2, text = "Комментарий Ивана к сатье про бизнес", rating = 0)
+comment5 = Comment.objects.create(id_post = post2, id_user = user1, text = "Комментарий Александра к статье про культуру и кино", rating = 0)
+
+#Имитации проставления лийк/дизлайк к статьям и комментариям.
+post1.dislike()
+post2.like()
+post3.like()
+post3.like()
+post3.dislike()
+comment1.like()
+comment1.dislike()
+comment2.like()
+comment3.like()
+comment4.dislike()
+
+# обновляем рейтинг автором
+author1.update_rating()
+author2.update_rating()
+
+# Выводим данные автора с наивысшим рейтингом
+max_reit = Author.objects.all().order_by('-rating')[0]
+print(max_reit.id_user.username, max_reit.rating)
+
+# Выводим данные статье с наивысшим рейтингом.
+max_post = Post.objects.all().order_by('-rating')[0]
+print(max_post.created, max_post.id_author.id_user, max_post.rating, max_post.header, max_post.preview())
+
+# Выводим комментарии к лучшей статье
+max_post_comments = Comment.objects.filter(id_post = Post.objects.all().order_by('-rating')[0]).values('created', 'id_user', 'rating', 'text')
+for i in max_post_comments:
+	print(i)
+
